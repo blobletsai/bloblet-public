@@ -11,6 +11,18 @@ export default async function handler(
   }
 
   try {
+    const internalSecret = appConfig.secrets.internalApi || appConfig.secrets.cron
+    if (!internalSecret && process.env.NODE_ENV !== 'development') {
+      return res.status(404).json({ error: 'Not found' })
+    }
+    if (internalSecret) {
+      const hdr =
+        (req.headers['x-internal-auth'] as string) ||
+        (req.headers['x-internal-secret'] as string) ||
+        ''
+      if (hdr !== internalSecret) return res.status(403).json({ error: 'forbidden' })
+    }
+
     const { url: supabaseUrl, serviceKey: supabaseServiceKey } = appConfig.supabase
     
     if (!supabaseUrl) {

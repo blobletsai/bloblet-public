@@ -1,5 +1,13 @@
 import { useState } from 'react'
 
+export async function getServerSideProps() {
+  if (process.env.ENABLE_TEST_PAGES !== 'true' && process.env.NODE_ENV !== 'development') {
+    return { notFound: true }
+  }
+
+  return { props: {} }
+}
+
 export default function TestControls() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)

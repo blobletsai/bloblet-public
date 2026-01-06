@@ -5,6 +5,14 @@ import dynamic from 'next/dynamic'
 // Dev-only page for the legacy OrganicCanvas2D formations sandbox.
 // Production homepage uses BlobletsCanvas; keep this as a playground only.
 
+export async function getServerSideProps() {
+  if (process.env.ENABLE_TEST_PAGES !== 'true' && process.env.NODE_ENV !== 'development') {
+    return { notFound: true }
+  }
+
+  return { props: {} }
+}
+
 // Import canvas dynamically to avoid SSR issues
 const OrganicCanvas2D = dynamic(() => import('../components/OrganicCanvas2D'), {
   ssr: false

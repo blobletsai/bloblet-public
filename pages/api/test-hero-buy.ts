@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { appConfig } from '@/src/config/app'
 import { supaAdmin } from '@/src/server/supa'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -7,6 +8,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const internalSecret = appConfig.secrets.internalApi || appConfig.secrets.cron
+    if (!internalSecret && process.env.NODE_ENV !== 'development') {
+      return res.status(404).json({ error: 'Not found' })
+    }
+    if (internalSecret) {
+      const hdr =
+        (req.headers['x-internal-auth'] as string) ||
+        (req.headers['x-internal-secret'] as string) ||
+        ''
+      if (hdr !== internalSecret) return res.status(403).json({ error: 'forbidden' })
+    }
+
     const { count = 1, buyAmount = 10 } = req.query
     const numHeroes = Math.min(parseInt(count as string) || 1, 10)
     
