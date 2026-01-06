@@ -11,6 +11,11 @@ This project is built primarily by AI agents (Codex + Claude) under human direct
 - Admin routes are protected with secrets; public endpoints are rate-limited.
 - Internal test routes are disabled by default unless explicitly enabled.
 
+## Trust & Security
+- Wallet, treasury, and safety policies live in `docs/bible/05-security/`.
+- Economy + tokenomics are documented in `docs/bible/02-economy/`.
+- On-chain integration lives in `src/server/chains/solana/` and `src/client/solana/`.
+
 ## Docs
 Start with the Bloblet Bible index:
 - `docs/README.md`
