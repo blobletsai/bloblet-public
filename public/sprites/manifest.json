@@ -1,0 +1,51 @@
+{
+  "size": {
+    "w": 32,
+    "h": 32
+  },
+  "variants": [
+    {
+      "id": "base_32x32",
+      "url": "/sprites/variants/base_32x32.png"
+    },
+    {
+      "id": "variation_1_0x01ac97",
+      "url": "/sprites/variants/variation_1_0x01ac97.png"
+    },
+    {
+      "id": "variation_2_0x039841",
+      "url": "/sprites/variants/variation_2_0x039841.png"
+    },
+    {
+      "id": "variation_3_0x020773",
+      "url": "/sprites/variants/variation_3_0x020773.png"
+    },
+    {
+      "id": "variation_4_0x062000",
+      "url": "/sprites/variants/variation_4_0x062000.png"
+    },
+    {
+      "id": "variation_5_0x0283ff",
+      "url": "/sprites/variants/variation_5_0x0283ff.png"
+    }
+  ],
+  "anims": {
+    "idle": {
+      "frames": [
+        "/sprites/anims/idle_breathing_frame_00.png",
+        "/sprites/anims/idle_breathing_frame_01.png",
+        "/sprites/anims/idle_breathing_frame_02.png"
+      ],
+      "fps": 6
+    },
+    "walk": {
+      "frames": [
+        "/sprites/anims/walk_cycle_frame_00.png",
+        "/sprites/anims/walk_cycle_frame_01.png",
+        "/sprites/anims/walk_cycle_frame_02.png",
+        "/sprites/anims/walk_cycle_frame_03.png"
+      ],
+      "fps": 8
+    }
+  }
+}

@@ -1,0 +1,858 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap');
+
+/* Legacy class names (kept for compatibility, will migrate to Tailwind utilities) */
+.font-pressstart { font-family: 'Press Start 2P', monospace; }
+.pixel-tiny { font-size: 10px; line-height: 1.4; } /* For battle UI labels and small retro text */
+.pixel-small { font-size: 12px; line-height: 1.5; } /* Updated from 11px for accessibility */
+.pixel-body { font-size: 14px; line-height: 1.6; } /* Updated from 12px for better readability */
+
+:root {
+  /* === DESIGN SYSTEM TOKENS === */
+  /* Spacing Scale - Standardized increments for consistent rhythm */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+
+  /* Border Radius - Two sizes for all cards/panels/buttons */
+  --radius-sm: 12px;
+  --radius-lg: 24px;
+
+  /* Opacity Levels - Standardized transparency */
+  --opacity-low: 0.25;
+  --opacity-medium: 0.50;
+  --opacity-high: 0.75;
+
+  /* Purple fantasy theme - Refined for higher contrast and distinctiveness */
+  --bg: #0a0217;
+  --bg-alt: #1a0d35;
+  --surface: rgba(45, 24, 84, 0.85);     /* Higher opacity for better contrast */
+  --surface-solid: #2d1854;
+  --border-strong: #6b3dcc;              /* Brighter, more visible */
+  --border-soft: rgba(107, 61, 204, 0.4); /* Matches new border color */
+  --text-primary: #ffffff;               /* Pure white for max readability */
+  --text-muted: #c4b5fd;                 /* Higher contrast light purple */
+  --text-soft: rgba(196, 181, 253, 0.85); /* Higher opacity */
+  --accent: #ff2dd7;                     /* Hot pink - more punchy */
+  --accent-hover: #ff5ce3;
+  --accent-strong: #ff00cc;              /* Even stronger accent */
+  --highlight: #00ffff;                  /* Pure cyan - electric */
+  --danger: #ff1a75;
+  --success: #00ff9f;
+  --glow-ambient: rgba(107, 61, 204, 0.4); /* Matches new purple */
+  --glow-ambient-soft: rgba(107, 61, 204, 0.25);
+  --shadow-soft: 0 24px 60px rgba(10, 2, 23, 0.65); /* Deeper shadows */
+
+  /* Battle theme - High energy colors */
+  --combat-red: #ff2d2d;
+  --combat-orange: #ff8c38;
+  --warning-amber: #ffb946;
+  --tech-cyan: #00ffff;                  /* Pure cyan */
+  --energy-blue: #4d9eff;
+  --battle-border: #ff2dd7;              /* Match new accent */
+  --damage-overlay: rgba(26, 13, 53, 0.7); /* Darker overlay */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body { 
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(107, 61, 204, 0.45), transparent 50%),
+    radial-gradient(circle at 75% 18%, rgba(255, 45, 215, 0.35), transparent 58%),
+    radial-gradient(circle at 50% 90%, rgba(0, 255, 255, 0.15), transparent 65%),
+    linear-gradient(180deg, #0a0217 0%, #1a0d35 40%, #0a0217 100%);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure Next.js root fills viewport */
+html, body, #__next { width: 100%; height: 100%; }
+
+main { width: 100%; height: 100%; }
+
+/* Home fullscreen helper - ensure no margins or padding */
+.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.fullscreen canvas { 
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%; 
+  height: 100%; 
+}
+
+/* Avoid canvas baseline gaps */
+canvas { display: block; }
+
+/* --- Solana Wallet Adapter button theming (Connect Wallet) --- */
+:root {
+  --wallet-adapter-button-background: linear-gradient(135deg, #ff2dd7 0%, #6b3dcc 100%);
+  --wallet-adapter-button-background-hover: linear-gradient(135deg, #ff5ce3 0%, #8b5aec 100%);
+  --wallet-adapter-button-color: #ffffff;
+}
+.wallet-adapter-button {
+  background: var(--wallet-adapter-button-background) !important;
+  color: var(--wallet-adapter-button-color) !important;
+  padding: 0.25rem 0.5rem !important; /* px-2 py-1 */
+  height: auto !important;
+  border-radius: 0.375rem !important; /* rounded */
+  font-family: 'Press Start 2P', monospace !important; /* font-pressstart */
+  font-size: 12px !important; /* Updated from 11px for accessibility */
+  line-height: 1.5 !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  box-shadow: 0 4px 18px rgba(255, 127, 230, 0.35) !important;
+}
+.wallet-adapter-button:not([disabled]):hover {
+  background: var(--wallet-adapter-button-background-hover) !important;
+}
+.wallet-adapter-button:disabled {
+  opacity: 0.8 !important;
+}
+
+/* Wallet modal harmony with canvas */
+.wallet-adapter-modal-overlay {
+  background-color: rgba(10, 2, 23, 0.78) !important;
+}
+.wallet-adapter-modal-wrapper, .wallet-adapter-modal-container, .wallet-adapter-modal {
+  font-family: 'Press Start 2P', monospace !important;
+}
+.wallet-adapter-modal-wrapper .wallet-adapter-modal {
+  background: rgba(26, 13, 53, 0.95) !important;
+  border: 1px solid rgba(107, 61, 204, 0.6) !important;
+  border-radius: 16px !important;
+}
+.wallet-adapter-modal-title {
+  color: var(--text-primary) !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: linear-gradient(135deg, #6b3dcc 0%, #4d29a8 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(107, 61, 204, 0.6) !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button:not([disabled]):hover {
+  background: linear-gradient(135deg, #ff5ce3 0%, #6b3dcc 100%) !important;
+}
+
+/* Ensure AppKit web component is visible even if internal styles lag */
+appkit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: #1f2937; /* slate-800 */
+  color: #fff;
+  border: 1px solid #334155; /* slate-700 */
+  cursor: pointer;
+  position: relative;
+}
+
+/* Render visible label text even if internal UI fails to mount */
+appkit-button::before {
+  content: attr(label);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+  font-size: 13px;
+  line-height: 1;
+  color: #fff;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  color: var(--text-primary);
+}
+
+/* Chat ambient overlay (CSS-only) */
+.chat-ambient { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; overflow: hidden; }
+.chat-ambient::before { content: ""; position: absolute; inset: -15%; background: radial-gradient(ellipse at center, rgba(107, 61, 204, 0.22), rgba(0,0,0,0) 60%); }
+.chat-ambient::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(107,61,204,0.18) 0, rgba(107,61,204,0) 32%),
+    radial-gradient(circle at 78% 26%, rgba(255,45,215,0.2) 0, rgba(255,45,215,0) 36%),
+    radial-gradient(circle at 62% 68%, rgba(0,255,255,0.18) 0, rgba(0,255,255,0) 32%);
+  background-repeat: no-repeat;
+  animation: blobAmbient 18s linear infinite;
+}
+@keyframes blobAmbient { 
+  0%   { background-position: 0px 0px,    0px 0px,    0px 0px; }
+  50%  { background-position: 28px 18px, -22px 14px, 36px -26px; }
+  100% { background-position: 0px 0px,    0px 0px,    0px 0px; }
+}
+
+/* Typing dots */
+.typing-dots { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+.typing-dots.small { justify-content: flex-start; margin-left: 6px; }
+.typing-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--highlight); opacity: 0.7; animation: tdPulse 1.2s ease-in-out infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.30s; }
+@keyframes tdPulse { 0%, 80%, 100% { transform: translateY(0); opacity: 0.45 } 40% { transform: translateY(-3px); opacity: 0.95 } }
+
+.blob-bob {
+  animation: bob 3s ease-in-out infinite;
+}
+@keyframes bob {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+/* Shared fantasy button styles */
+.btn-fantasy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, var(--accent) 0%, #6b3dcc 100%);
+  color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px; /* Updated from 11px for accessibility */
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 28px rgba(255, 45, 215, 0.45);
+}
+.btn-fantasy:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+.btn-fantasy:disabled {
+  opacity: 0.58;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.btn-fantasy-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.8rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(107, 61, 204, 0.5);
+  background: rgba(45, 24, 84, 0.7);
+  color: var(--text-primary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px; /* Updated from 11px for accessibility */
+  letter-spacing: 0.04em;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.btn-fantasy-ghost:hover {
+  border-color: rgba(255, 45, 215, 0.8);
+  background: rgba(45, 24, 84, 0.9);
+}
+
+.chip-fantasy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 9999px;
+  background: rgba(107, 61, 204, 0.25);
+  border: 1px solid rgba(107, 61, 204, 0.45);
+  color: var(--text-muted);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px; /* Updated from 10px for accessibility */
+  letter-spacing: 0.06em;
+}
+
+.toast-fantasy {
+  background: rgba(26, 13, 53, 0.95);
+  border: 1px solid rgba(107, 61, 204, 0.5);
+  color: var(--text-primary);
+  box-shadow: 0 18px 44px rgba(10, 2, 23, 0.7);
+}
+
+/* ===== Battle UI Animations ===== */
+
+/* Subtle pulse animation for battle timer */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Fade in up animation for list items */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+
+/* Screen pulse overlay for energize activation */
+@keyframes screen-pulse {
+  0% {
+    background: radial-gradient(circle at center, rgba(143, 247, 255, 0.15), transparent 70%);
+  }
+  50% {
+    background: radial-gradient(circle at center, rgba(143, 247, 255, 0.08), transparent 70%);
+  }
+  100% {
+    background: radial-gradient(circle at center, rgba(143, 247, 255, 0), transparent 70%);
+  }
+}
+
+.animate-screen-pulse {
+  animation: screen-pulse 0.6s ease-out;
+}
+
+/* Button charge animation */
+@keyframes button-charge {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  30% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+.animate-button-charge {
+  animation: button-charge 0.6s ease-out;
+}
+
+/* Particle burst animation */
+@keyframes particle-burst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform:
+      translate(
+        calc(cos(var(--angle)) * 80px),
+        calc(sin(var(--angle)) * 80px)
+      )
+      scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-particle-burst {
+  animation: particle-burst 0.8s ease-out forwards;
+}
+
+/* Power flow animation for luck bucket */
+@keyframes power-flow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-power-flow {
+  background-size: 200% 100%;
+  animation: power-flow 3s ease-in-out infinite;
+}
+
+/* ===== BATTLE/COMBAT THEME ENHANCEMENTS ===== */
+
+/* Angular/Geometric Clip Paths */
+.clip-hexagon {
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
+
+.clip-slash-corner-tl {
+  clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 20%);
+}
+
+.clip-slash-corner-tr {
+  clip-path: polygon(0% 0%, 80% 0%, 100% 20%, 100% 100%, 0% 100%);
+}
+
+.clip-slash-corner-br {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 80% 100%, 0% 100%);
+}
+
+.clip-slash-corner-bl {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 20% 100%, 0% 80%);
+}
+
+/* Tactical Dock - Angular beveled octagonal shape for command center aesthetics */
+.clip-tactical-dock {
+  clip-path: polygon(
+    30px 0%, calc(100% - 30px) 0%,
+    100% 30px, 100% calc(100% - 30px),
+    calc(100% - 30px) 100%, 30px 100%,
+    0% calc(100% - 30px), 0% 30px
+  );
+}
+
+/* Tactical Badge - Angular shape for reward/status displays (smaller bevel for compact UI) */
+.clip-tactical-badge {
+  clip-path: polygon(
+    12px 0%, calc(100% - 12px) 0%,
+    100% 12px, 100% calc(100% - 12px),
+    calc(100% - 12px) 100%, 12px 100%,
+    0% calc(100% - 12px), 0% 12px
+  );
+}
+
+/* Tactical Dock Vertical - Angular beveled shape for vertical sidebar (optimized proportions) */
+.clip-tactical-dock-vertical {
+  clip-path: polygon(
+    20px 0%, calc(100% - 20px) 0%,
+    100% 20px, 100% calc(100% - 20px),
+    calc(100% - 20px) 100%, 20px 100%,
+    0% calc(100% - 20px), 0% 20px
+  );
+}
+
+/* Battle Damage Texture Overlays */
+.damage-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.battle-scratches::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.1) 49%, rgba(255,255,255,0.1) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.08) 49%, rgba(255,255,255,0.08) 51%, transparent 52%);
+  background-size: 20px 20px, 30px 30px;
+  background-position: 0 0, 10px 10px;
+  mix-blend-mode: overlay;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cracked-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100,100 L120,80 L140,90 M100,100 L85,115 L75,130 M100,100 L130,120' stroke='rgba(255,255,255,0.15)' stroke-width='0.5' fill='none'/%3E%3C/svg%3E");
+  background-size: cover;
+  mix-blend-mode: screen;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Warning & Alert Animations */
+@keyframes hazard-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.3; }
+}
+
+.animate-hazard-blink {
+  animation: hazard-blink 1s steps(1, end) infinite;
+}
+
+@keyframes threat-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--combat-red), inset 0 0 10px rgba(255, 56, 56, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--combat-red), inset 0 0 20px rgba(255, 56, 56, 0.4);
+  }
+}
+
+.animate-threat-pulse {
+  animation: threat-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.8;
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 3s linear infinite;
+}
+
+/* CRT Scan Line - horizontal sweep from top to bottom */
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-scan-line {
+  animation: scan-line 4s linear infinite;
+}
+
+@keyframes warning-flash {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(255, 185, 70, 0.2); }
+}
+
+.animate-warning-flash {
+  animation: warning-flash 1s ease-in-out infinite;
+}
+
+/* Tech/Energy Glow Effects */
+@keyframes circuit-flow {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    background-position: 200% 50%;
+    opacity: 0.6;
+  }
+}
+
+.animate-circuit-flow {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--tech-cyan) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: circuit-flow 2s linear infinite;
+}
+
+@keyframes hologram-flicker {
+  0%, 100% { opacity: 1; }
+  2% { opacity: 0.8; }
+  4% { opacity: 1; }
+  8% { opacity: 0.85; }
+  10% { opacity: 1; }
+  70% { opacity: 1; }
+  72% { opacity: 0.9; }
+  74% { opacity: 1; }
+}
+
+.animate-hologram-flicker {
+  animation: hologram-flicker 4s ease-in-out infinite;
+}
+
+/* ===== LOADOUT CEREMONY ANIMATIONS ===== */
+
+/* Bloblet breathing animation - gentle idle movement */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Hide sidebar (DockRail) when modals are open for immersive battle experience */
+body[data-modal-open] .pointer-events-none.absolute.left-6.top-1\/2 {
+  display: none;
+}
+
+/* Weapon slides in from left during equip ceremony */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Shield slides in from right during equip ceremony */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Stat badge pulse when equipment changes */
+@keyframes stat-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.animate-stat-pulse {
+  animation: stat-pulse 0.4s ease-out;
+}
+
+/* Corner tactical markers stagger appearance */
+@keyframes corner-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-corner-appear {
+  animation: corner-appear 0.3s ease-out forwards;
+}
+
+/* ===== END LOADOUT CEREMONY ANIMATIONS ===== */
+
+/* ===== BATTLEFIELD ATMOSPHERE ANIMATIONS ===== */
+
+/* Floating debris particles - slow vertical drift with subtle horizontal sway */
+@keyframes float-debris-0 {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(8px, -15px);
+  }
+  50% {
+    transform: translate(-5px, -30px);
+  }
+  75% {
+    transform: translate(3px, -45px);
+  }
+}
+
+@keyframes float-debris-1 {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(-12px, -20px) rotate(120deg);
+  }
+  66% {
+    transform: translate(6px, -40px) rotate(240deg);
+  }
+}
+
+@keyframes float-debris-2 {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(-10px, -18px);
+  }
+  60% {
+    transform: translate(4px, -36px);
+  }
+  90% {
+    transform: translate(-2px, -54px);
+  }
+}
+
+/* Drifting smoke layers - slow horizontal movement */
+@keyframes drift-smoke-1 {
+  0% {
+    transform: translateY(30%) translateX(0);
+  }
+  100% {
+    transform: translateY(30%) translateX(100px);
+  }
+}
+
+@keyframes drift-smoke-2 {
+  0% {
+    transform: translateY(60%) translateX(0);
+  }
+  100% {
+    transform: translateY(60%) translateX(-80px);
+  }
+}
+
+@keyframes drift-smoke-3 {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.18;
+    transform: scale(1.05);
+  }
+}
+
+/* Tactical scan line drift */
+@keyframes scan-line-drift {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(20px);
+  }
+}
+
+/* ===== END BATTLEFIELD ATMOSPHERE ANIMATIONS ===== */
+
+/* Gear card hover glow effects */
+.gear-card-common:hover {
+  box-shadow: 0 0 25px rgba(255,45,215,0.5), 0 0 50px rgba(255,45,215,0.3), 0 0 75px rgba(255,45,215,0.18) !important;
+}
+
+.gear-card-rare:hover {
+  box-shadow: 0 0 30px rgba(255,231,128,0.55), 0 0 60px rgba(255,231,128,0.35), 0 0 90px rgba(255,231,128,0.2) !important;
+}
+
+.gear-card-legendary:hover {
+  box-shadow: 0 0 35px rgba(143,247,255,0.6), 0 0 70px rgba(143,247,255,0.4), 0 0 105px rgba(143,247,255,0.25) !important;
+}
+
+@keyframes energy-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--energy-blue), inset 0 0 5px rgba(77, 158, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px var(--energy-blue), inset 0 0 15px rgba(77, 158, 255, 0.4);
+  }
+}
+
+.animate-energy-pulse {
+  animation: energy-pulse 2s ease-in-out infinite;
+}
+
+/* Tech Border Glow */
+.tech-border {
+  position: relative;
+  border: 2px solid var(--tech-cyan);
+  box-shadow:
+    0 0 10px rgba(0, 255, 247, 0.5),
+    inset 0 0 10px rgba(0, 255, 247, 0.1);
+}
+
+.tech-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg,
+    var(--tech-cyan),
+    var(--energy-blue),
+    var(--tech-cyan)
+  );
+  background-size: 200% 200%;
+  animation: circuit-flow 3s linear infinite;
+  border-radius: inherit;
+  opacity: 0.3;
+  z-index: -1;
+  filter: blur(4px);
+}
+
+/* Corner Accent Markers */
+.corner-markers::before,
+.corner-markers::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--tech-cyan);
+}
+
+.corner-markers::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-markers::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Custom Scrollbar - Cross-browser support */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: rgba(10, 3, 22, 0.3);
+  border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(148, 93, 255, 0.4);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 93, 255, 0.6);
+}

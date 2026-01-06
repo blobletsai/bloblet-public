@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bloblets Canvas — Zero‑Setup Preview</title>
+  <style>
+    html, body { margin:0; padding:0; height:100%; background:#000; }
+    #root { position:fixed; inset:0; }
+    #hud { position:fixed; top:12px; left:12px; z-index:10; display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.5); color:#fff; padding:8px 10px; border-radius:8px; font:12px/1.3 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; }
+    #hud input[type="number"]{ width:68px; background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:4px; }
+    #hud button{ background:#2d3748; color:#fff; border:0; padding:6px 10px; border-radius:6px; cursor:pointer; }
+    #hud button:hover{ background:#4a5568 }
+    #badge { position:fixed; bottom:10px; right:12px; color:#e5e7eb; font:11px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; background:rgba(0,0,0,0.4); padding:4px 6px; border-radius:6px; }
+    canvas { image-rendering: pixelated; }
+  </style>
+  <!-- No bundler/Next needed; open file directly in a browser. -->
+</head>
+<body>
+  <div id="root">
+    <canvas id="c"></canvas>
+    <div id="hud">
+      <button id="shuffle">Shuffle</button>
+      <label>Count <input id="count" type="number" min="50" max="1000" step="10" value="260"></label>
+      <label><input id="simdeaths" type="checkbox"> Sim deaths</label>
+      <label><input id="showkeep" type="checkbox"> Show keep‑out</label>
+      <button id="reset">Reset View</button>
+    </div>
+    <div id="badge">Zero‑setup preview (no server)</div>
+  </div>
+  <script>
+  (function(){
+    const cvs = document.getElementById('c');
+    const ctx = cvs.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    ctx.imageSmoothingEnabled = false;
+
+    // Controls
+    const btnShuffle = document.getElementById('shuffle');
+    const inpCount = document.getElementById('count');
+    const cbDeaths = document.getElementById('simdeaths');
+    const cbKeep = document.getElementById('showkeep');
+    const btnReset = document.getElementById('reset');
+
+    // Layout params mirroring OrganicCanvas2D
+    const WORLD_W = 2200; const WORLD_H = 1400;
+    const KEEP_W = 900; const KEEP_H = 560;
+    const anchors = [
+      { x: -780, y: -60, r: 220 },
+      { x: -660, y: 220, r: 240 },
+      { x: -520, y: -280, r: 220 },
+      { x: -320, y: 340, r: 260 },
+      { x: -80,  y: -60, r: 260, bias: 1.2 },
+      { x:  160, y: 320, r: 300, bias: 1.5 },
+      { x:  420, y: -40, r: 260 },
+      { x:  640, y: 220, r: 240 },
+      { x:  760, y: -160, r: 220 },
+    ];
+    const pal = ['#4d5627','#575f2b','#626a2f','#6e7634','#7a8239'];
+
+    function h32(s){let h=2166136261>>>0; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i); h=Math.imul(h,16777619)} return h>>>0}
+    function addrFromSeed(seed){ let out=''; let a=h32(seed); for(let i=0;i<10;i++){ a=Math.imul((a^0x9e3779b9)>>>0,16777619)>>>0; const part=(a>>>0).toString(16).padStart(8,'0'); out+=part.slice(0,4)} return '0x'+out.slice(0,40) }
+    function sampler(seed){let s=seed||1; return ()=>{ s=(s*1664525+1013904223)>>>0; return (s & 0xffffffff)/0xffffffff }}
+    function inKeep(x,y){return ((x*x)/((KEEP_W/2)*(KEEP_W/2)) + (y*y)/((KEEP_H/2)*(KEEP_H/2))) < 1}
+
+    // Seamless world tile for infinite background (no visible seams, anchored in world space)
+    function makeSeamlessWorldTile(TW){
+      const W = TW, H = TW; // tile size in world pixels
+      const off = document.createElement('canvas'); off.width=W; off.height=H; const bt=off.getContext('2d'); bt.imageSmoothingEnabled=false;
+      const bayer=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+      // Toroidal value noise so edges wrap perfectly
+      const CELLS=16; const cellW=W/CELLS, cellH=H/CELLS; let s=h32('bg-tile'); const rnd=()=>{ s=(s*1664525+1013904223)>>>0; return (s & 0xffffffff)/0xffffffff }
+      const grid=[]; for(let j=0;j<CELLS;j++){ const row=[]; for(let i=0;i<CELLS;i++) row.push(rnd()); grid.push(row) }
+      function vNoise(x,y){ const X=x/cellW, Y=y/cellH; const x0=Math.floor(X), y0=Math.floor(Y); const x1=(x0+1)%CELLS, y1=(y0+1)%CELLS; const sx=X-x0, sy=Y-y0; const n00=grid[(y0%CELLS+CELLS)%CELLS][(x0%CELLS+CELLS)%CELLS]; const n10=grid[(y0%CELLS+CELLS)%CELLS][x1]; const n01=grid[(y1%CELLS+CELLS)%CELLS][(x0%CELLS+CELLS)%CELLS]; const n11=grid[y1][x1]; const ix0=n00+(n10-n00)*sx; const ix1=n01+(n11-n01)*sx; return ix0+(ix1-ix0)*sy }
+      const img=bt.createImageData(W,H);
+      for(let y=0;y<H;y++){
+        for(let x=0;x<W;x++){
+          const v=0.62*vNoise(x*0.9,y*0.9)+0.38*vNoise(x*0.45,y*0.45);
+          const t=((bayer[y&3][x&3])+0.5)/16; const q=Math.max(0,Math.min(pal.length-1,Math.floor((v+t*0.10)*pal.length)));
+          const col=pal[q]; const r=parseInt(col.slice(1,3),16), g=parseInt(col.slice(3,5),16), b=parseInt(col.slice(5,7),16); const i=(y*W+x)*4;
+          img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b; img.data[i+3]=255;
+        }
+      }
+      bt.putImageData(img,0,0);
+      return off;
+    }
+    const TILE_WU = 640; // tile size in world units
+    const bgTile = makeSeamlessWorldTile(TILE_WU);
+
+    function valueNoiseSetup(){
+      // world density grid
+      const DGRID=32; const gxCount=Math.ceil(WORLD_W/DGRID)+3, gyCount=Math.ceil(WORLD_H/DGRID)+3; let s=h32('density'); const rnd=()=>{ s=(s*1664525+1013904223)>>>0; return (s & 0xffffffff)/0xffffffff }
+      const dGrid=[]; for(let j=0;j<gyCount;j++){ const row=[]; for(let i=0;i<gxCount;i++) row.push(rnd()); dGrid.push(row) }
+      function vNoise(x,y){ const X=(x+WORLD_W/2)/DGRID, Y=(y+WORLD_H/2)/DGRID; const x0=Math.floor(X), y0=Math.floor(Y); const x1=Math.min(x0+1,gxCount-1), y1=Math.min(y0+1,gyCount-1); const sx=X-x0, sy=Y-y0; const n00=dGrid[y0]?.[x0]??0, n10=dGrid[y0]?.[x1]??n00, n01=dGrid[y1]?.[x0]??n00, n11=dGrid[y1]?.[x1]??n10; const ix0=n00+(n10-n00)*sx; const ix1=n01+(n11-n01)*sx; return ix0+(ix1-ix0)*sy }
+      return (x,y)=>{ const n=0.65*vNoise(x*0.75,y*0.75)+0.35*vNoise(x*0.35,y*0.35); const edgeX=Math.max(0,Math.abs(x)-WORLD_W*0.48)/(WORLD_W*0.02); const edgeY=Math.max(0,Math.abs(y)-WORLD_H*0.48)/(WORLD_H*0.02); const dn=Math.max(0,n-0.15*Math.max(edgeX,edgeY)); return Math.min(1,Math.max(0,dn*dn*1.15)) }
+    }
+    const density=valueNoiseSetup();
+
+    // Data
+    let seed=42, count=Number(inpCount.value||260); let items=[];
+    function gen(){
+      items = [];
+      for(let i=0;i<count;i++){
+        const address = addrFromSeed('DEV|'+seed+'|'+i);
+        const rank = i+1; const tier = rank<=20?'top':(rank<=70?'middle':'bottom');
+        const h = h32(address); const rnd=sampler(h);
+        const ai = (tier==='top' ? [5,4,6] : (tier==='middle'?[3,4,5,6,7]:anchors.map((_,j)=>j)))[h % (tier==='top'?3:(tier==='middle'?5:anchors.length))];
+        const A=anchors[ai];
+        let x=0,y=0, placed=false;
+        for(let a=0;a<10;a++){
+          const th = rnd()*Math.PI*2; const rad = Math.pow(rnd(),0.6)*(A.r*(A.bias||1));
+          const ex=A.x+Math.cos(th)*rad*(0.95+rnd()*0.1); const ey=A.y+Math.sin(th)*rad*(0.85+rnd()*0.15);
+          if(inKeep(ex,ey)) continue; const d=density(ex,ey); if(rnd() < (0.3+d*0.7)){ x=ex+(rnd()-0.5)*10; y=ey+(rnd()-0.5)*10; placed=true; break }
+        }
+        if(!placed){ const ang=rnd()*Math.PI*2; const rad=(Math.max(KEEP_W,KEEP_H)*0.55)+rnd()*240; x=Math.cos(ang)*rad; y=Math.sin(ang)*rad }
+        // Variable sizes: rank buckets + per-address jitter
+        const base = rank<=5?40:rank<=20?32:rank<=50?24:18;
+        const jitter = 0.85 + (h % 1000)/1000 * 0.35; // 0.85..1.20
+        const r = Math.round(base * jitter);
+        items.push({ address, tier, is_alive:true, x,y,r, vx:(((h>>>16)%1000)/1000-0.5)*0.09, vy:(((h>>>20)%1000)/1000-0.5)*0.09 })
+      }
+    }
+    gen();
+
+    let camX=0, camY=0, zoom=1; let dragging=false, lastX=0, lastY=0; let raf=0;
+    function resize(){ const w=window.innerWidth, h=window.innerHeight; cvs.width=Math.floor(w*dpr); cvs.height=Math.floor(h*dpr); cvs.style.width=w+'px'; cvs.style.height=h+'px' }
+    resize(); window.addEventListener('resize', resize);
+    cvs.addEventListener('pointerdown', (e)=>{ dragging=true; lastX=e.clientX; lastY=e.clientY });
+    window.addEventListener('pointerup', ()=>{ dragging=false });
+    window.addEventListener('pointermove', (e)=>{ if(!dragging) return; const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY; camX-=dx/zoom; camY-=dy/zoom });
+    cvs.addEventListener('wheel', (e)=>{ e.preventDefault(); const rect=cvs.getBoundingClientRect(); const mx=e.clientX-rect.left, my=e.clientY-rect.top; const ww=cvs.width/dpr, wh=cvs.height/dpr; const wx=camX+(mx-ww/2)/zoom, wy=camY+(my-wh/2)/zoom; const next=Math.min(3.0,Math.max(0.35, zoom * (Math.sign(e.deltaY)<0?1.08:0.92))); if(next===zoom) return; zoom=next; const wx2=camX+(mx-ww/2)/zoom, wy2=camY+(my-wh/2)/zoom; camX+=wx-wx2; camY+=wy-wy2 }, { passive:false });
+
+    function draw(){
+      const w=cvs.width, h=cvs.height; ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,w,h); const ww=w/dpr, wh=h/dpr;
+      // Clear and set transform
+      ctx.fillStyle = '#1a1f11'; ctx.fillRect(0,0,ww,wh);
+      ctx.translate(ww/2, wh/2); ctx.scale(zoom, zoom); ctx.translate(-camX, -camY);
+      // Infinite world background — tile a seamless world-anchored tile
+      ctx.imageSmoothingEnabled=false;
+      const minX = camX - ww/(2*zoom) - TILE_WU*2, minY = camY - wh/(2*zoom) - TILE_WU*2;
+      const maxX = camX + ww/(2*zoom) + TILE_WU*2, maxY = camY + wh/(2*zoom) + TILE_WU*2;
+      const startX = Math.floor((minX) / TILE_WU) * TILE_WU;
+      const startY = Math.floor((minY) / TILE_WU) * TILE_WU;
+      for(let y=startY; y<maxY; y+=TILE_WU){
+        for(let x=startX; x<maxX; x+=TILE_WU){
+          ctx.drawImage(bgTile, x, y, TILE_WU, TILE_WU);
+        }
+      }
+      if(cbKeep.checked){ ctx.save(); ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=2/zoom; ctx.beginPath(); ctx.ellipse(0,0,KEEP_W/2,KEEP_H/2,0,0,Math.PI*2); ctx.stroke(); ctx.restore() }
+      for(const it of items){
+        // sprite (circle stand-in)
+        if(window.__imgList && window.__imgList.length){
+          ctx.save(); ctx.beginPath(); ctx.arc(it.x,it.y,it.r,0,Math.PI*2); ctx.clip();
+          const list = window.__imgList; const idx = (h32(it.address) % list.length);
+          const im = list[idx];
+          ctx.drawImage(im, it.x-it.r, it.y-it.r, it.r*2, it.r*2);
+          if(!it.is_alive){ ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(it.x-it.r, it.y-it.r, it.r*2, it.r*2) }
+          ctx.restore();
+          ctx.lineWidth=1/zoom; ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.arc(it.x,it.y,it.r,0,Math.PI*2); ctx.stroke();
+        } else {
+          ctx.beginPath(); ctx.arc(it.x,it.y,it.r,0,Math.PI*2);
+          if(it.is_alive){ ctx.fillStyle = it.tier==='top'?'#ffd200':(it.tier==='middle'?'#22d3ee':'#34d399') } else { ctx.fillStyle='rgba(180,180,180,0.7)' }
+          ctx.fill(); ctx.lineWidth=1/zoom; ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.stroke();
+        }
+        // label
+        const s = it.address.slice(0,6)+'…'+it.address.slice(-4); const fpx=Math.max(11,Math.min(14,Math.round(13/zoom))); ctx.font=fpx+'px system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; const tw=ctx.measureText(s).width; const padX=6/zoom, padY=3/zoom; const pillW=tw+padX*2, pillH=fpx+padY*2; const lx=it.x, ly=it.y-it.r-(10/zoom); ctx.fillStyle='rgba(0,0,0,0.55)'; const rx=6/zoom; ctx.beginPath(); ctx.moveTo(lx - pillW/2 + rx, ly - pillH/2); ctx.lineTo(lx + pillW/2 - rx, ly - pillH/2); ctx.quadraticCurveTo(lx + pillW/2, ly - pillH/2, lx + pillW/2, ly - pillH/2 + rx); ctx.lineTo(lx + pillW/2, ly + pillH/2 - rx); ctx.quadraticCurveTo(lx + pillW/2, ly + pillH/2, lx + pillW/2 - rx, ly + pillH/2); ctx.lineTo(lx - pillW/2 + rx, ly + pillH/2); ctx.quadraticCurveTo(lx - pillW/2, ly + pillH/2, lx - pillW/2, ly + pillH/2 - rx); ctx.lineTo(lx - pillW/2, ly - pillH/2 + rx); ctx.quadraticCurveTo(lx - pillW/2, ly - pillH/2, lx - pillW/2 + rx, ly - pillH/2); ctx.fill(); ctx.fillStyle='#fff'; ctx.fillText(s,lx,ly+0.5/zoom);
+      }
+    }
+
+    function step(){
+      // light overlap push
+      for(let i=0;i<items.length;i++){
+        const a=items[i]; if(!a) continue; let ax=0, ay=0; for(let j=0;j<items.length;j++){ if(i===j) continue; const b=items[j]; if(!b) continue; const dx=a.x-b.x, dy=a.y-b.y; const minR=(a.r+b.r)*1.05; const d2=dx*dx+dy*dy; if(d2<minR*minR && d2>1){ const d=Math.sqrt(d2); const push=(minR-d)*0.015; ax+=(dx/d)*push; ay+=(dy/d)*push } } a.vx=a.vx*0.985+ax; a.vy=a.vy*0.985+ay }
+      for(const it of items){ it.x+=it.vx; it.y+=it.vy }
+      if(cbDeaths.checked && Math.random()<0.02){ // random flip
+        const idx=Math.floor(Math.random()*items.length); if(items[idx]) items[idx].is_alive = !items[idx].is_alive;
+      }
+      draw(); raf=requestAnimationFrame(step);
+    }
+    function start(){ cancelAnimationFrame(raf); raf=requestAnimationFrame(step) }
+    start();
+
+    // UI handlers
+    btnShuffle.addEventListener('click', ()=>{ seed++; gen() })
+    inpCount.addEventListener('change', ()=>{ count=Math.max(50, Math.min(1000, parseInt(inpCount.value||'0',10)||0)); gen() })
+    btnReset.addEventListener('click', ()=>{ camX=0; camY=0; zoom=1 })
+
+    // Load a small set of mascot sprites (local files) for variety
+    ;(function(){
+      const files = [
+        'sprites/variants/base_32x32.png',
+        'sprites/variants/variation_1_0x01ac97.png',
+        'sprites/variants/variation_2_0x039841.png',
+        'sprites/variants/variation_3_0x020773.png',
+        'sprites/variants/variation_4_0x062000.png',
+        'sprites/variants/variation_5_0x0283ff.png',
+      ];
+      const imgs = []; let loaded = 0;
+      files.forEach((src) => {
+        const im = new Image(); im.src = src; im.onload = () => { loaded++; if(loaded===files.length){ window.__imgList = imgs } }; imgs.push(im)
+      })
+    })();
+  })();
+  </script>
+</body>
+</html>

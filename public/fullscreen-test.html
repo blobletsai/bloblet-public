@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fullscreen Canvas Test</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b0f14; }
+      #hud { position: fixed; top: 8px; left: 8px; z-index: 10; background: rgba(0,0,0,0.6); color: #e5e7eb; font: 12px/1.2 system-ui, sans-serif; padding: 6px 8px; border-radius: 6px; border: 1px solid #334155; }
+      #bar { position: fixed; top: 8px; right: 8px; z-index: 10; display: flex; gap: 8px; }
+      button { background: #2563eb; color: #fff; border: 0; padding: 8px 10px; border-radius: 6px; font: 12px system-ui, sans-serif; cursor: pointer; }
+      button.alt { background: #475569; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="hud">vw: - × vh: - | iw: - × ih: - | dpr: -</div>
+    <div id="bar">
+      <button id="pop">Pop out</button>
+      <button id="fs" class="alt">Fullscreen</button>
+    </div>
+    <canvas id="c"></canvas>
+    <script>
+      const c = document.getElementById('c');
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      const hud = document.getElementById('hud');
+      function size() {
+        const vv = window.visualViewport || null;
+        const w = Math.floor((vv && vv.width) || window.innerWidth);
+        const h = Math.floor((vv && vv.height) || window.innerHeight);
+        const dpr = window.devicePixelRatio || 1;
+        c.width = Math.floor(w * dpr);
+        c.height = Math.floor(h * dpr);
+        c.style.width = w + 'px';
+        c.style.height = h + 'px';
+        // Draw
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.clearRect(0,0,c.width,c.height);
+        ctx.scale(dpr, dpr);
+        ctx.fillStyle = '#0b0f14';
+        ctx.fillRect(0,0,w,h);
+        // Border + corners
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1,1,w-2,h-2);
+        ctx.fillStyle = '#22d3ee';
+        ctx.fillRect(6,6,8,8);
+        ctx.fillRect(w-14,6,8,8);
+        ctx.fillRect(6,h-14,8,8);
+        ctx.fillRect(w-14,h-14,8,8);
+        // Label
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.fillText(`canvas: ${w}×${h} (css)`, 18, 24);
+        hud.textContent = `vw: ${Math.floor((vv && vv.width) || 0)} × vh: ${Math.floor((vv && vv.height) || 0)} | iw: ${window.innerWidth} × ih: ${window.innerHeight} | dpr: ${dpr}`;
+      }
+      size();
+      window.addEventListener('resize', size);
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', size);
+      document.getElementById('pop').onclick = () => {
+        const w = (screen.availWidth || innerWidth) - 8;
+        const h = (screen.availHeight || innerHeight) - 8;
+        const feat = `popup=yes,toolbar=no,menubar=no,location=no,status=no,scrollbars=no,resizable=yes,left=0,top=0,width=${w},height=${h}`;
+        const url = location.href.includes('popout=1') ? location.href : (location.href + (location.search ? '&' : '?') + 'popout=1');
+        window.open(url, 'blobletsPopOut', feat);
+      };
+      document.getElementById('fs').onclick = async () => {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else await document.documentElement.requestFullscreen();
+        } catch {}
+      };
+    </script>
+  </body>
+  </html>

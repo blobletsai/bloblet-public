@@ -1,0 +1,46 @@
+{
+  "sandbox": {
+    "faucet": {
+      "enabled": true,
+      "grantRp": 1000,
+      "gasBnb": 0,
+      "maxClaimsPerWallet": 1
+    },
+    "gate": {
+      "minTokens": 200
+    },
+    "rewardTopUp": {
+      "minRp": 50,
+      "maxRp": 1000
+    },
+    "pricing": {
+      "renameRp": 50,
+      "landmarkBaseRp": 150,
+      "landmarkStepRp": 50,
+      "customAvatarRp": 250,
+      "landmarkPremiumPct": 0.2
+    }
+  },
+  "production": {
+    "faucet": {
+      "enabled": false,
+      "grantRp": 0,
+      "gasBnb": 0,
+      "maxClaimsPerWallet": 0
+    },
+    "gate": {
+      "minTokens": 10000
+    },
+    "rewardTopUp": {
+      "minRp": 100,
+      "maxRp": 5000
+    },
+    "pricing": {
+      "renameRp": 200,
+      "landmarkBaseRp": 600,
+      "landmarkStepRp": 200,
+      "customAvatarRp": 2500,
+      "landmarkPremiumPct": 0.25
+    }
+  }
+}
