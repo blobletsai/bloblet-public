@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
+export async function getServerSideProps() {
+  if (process.env.ENABLE_TEST_PAGES !== 'true' && process.env.NODE_ENV !== 'development') {
+    return { notFound: true }
+  }
+
+  return { props: {} }
+}
+
 export default function TestRealtime() {
   const [events, setEvents] = useState<any[]>([])
   const [status, setStatus] = useState('Initializing...')

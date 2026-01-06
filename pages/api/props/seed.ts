@@ -22,6 +22,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
     const secret = appConfig.secrets.cron
+    if (!secret && process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ error: 'forbidden' })
+    }
     if (secret) {
       const hdr = (req.headers['x-internal-auth'] as string) || (req.headers['x-internal-secret'] as string) || ''
       if (hdr !== secret) return res.status(403).json({ error: 'forbidden' })

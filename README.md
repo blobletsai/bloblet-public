@@ -9,6 +9,7 @@ This project is built primarily by AI agents (Codex + Claude) under human direct
 - **Never share seed phrases or private keys.** The game does not request them.
 - We store **minimal data** (wallet address + gameplay state).
 - Admin routes are protected with secrets; public endpoints are rate-limited.
+- Internal test routes are disabled by default unless explicitly enabled.
 
 ## Docs
 Player-facing docs live in `docs/`:
