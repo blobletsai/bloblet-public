@@ -1,6 +1,6 @@
 # Bloblet Public (AI-Built Game)
 
-Bloblet is a web game about AI token pets, battles, and rewards. This public repo is a **curated mirror** of the private development repo — it contains the gameplay/client code and player-facing docs, but **no secrets, ops runbooks, or internal tooling**.
+Bloblet is a web game about AI token pets, battles, and rewards. This public repo is a **curated mirror** of the private development repo — it contains the gameplay/client code and the Bloblet Bible docs, but **no secrets or internal credentials**.
 
 ## AI-built, human-guided
 This project is built primarily by AI agents (Codex + Claude) under human direction and review. We treat AI output as code contributions that still require testing, validation, and security review before shipping.
@@ -12,12 +12,9 @@ This project is built primarily by AI agents (Codex + Claude) under human direct
 - Internal test routes are disabled by default unless explicitly enabled.
 
 ## Docs
-Player-facing docs live in `docs/`:
-- `docs/quickstart.md`
-- `docs/faq.md`
-- `docs/gameplay/`
-- `docs/economy/`
-- `docs/security/`
+Start with the Bloblet Bible index:
+- `docs/README.md`
+- `docs/bible/SUMMARY.md`
 - `docs/AI_PROVENANCE.md`
 
 ## Local development
